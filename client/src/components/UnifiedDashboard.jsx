@@ -3,12 +3,101 @@ import {
   Clock, Sparkles, Brain, Loader2, BookOpen, Plus, TrendingUp, AlertTriangle, Users, Menu
 } from "lucide-react";
 import { db, auth } from "../firebase";
-// ... imports ...
+import SmartNotifications from "./SmartNotifications";
+import FocusTimer from "./FocusTimer";
+import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
 
 const UnifiedDashboard = ({ isDark, setSidebarOpen }) => {
-  // ... state ...
+  // --- THEME CONSTANTS ---
+  const theme = isDark ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900";
+  const card = isDark ? "bg-gray-800 border-gray-700 shadow-xl" : "bg-white border-gray-200 shadow-sm";
+  const textPrimary = isDark ? "text-white" : "text-gray-900";
+  const textSecondary = isDark ? "text-gray-400" : "text-gray-600";
+  const inputTheme = isDark ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900";
 
-  // ... effects ...
+  // --- STATE ---
+  const [upcomingClasses, setUpcomingClasses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showScoreModal, setShowScoreModal] = useState(false);
+  const [newScore, setNewScore] = useState({ subject: "", topic: "", score: "", maxScore: "" });
+  const [metrics, setMetrics] = useState({ avgScore: 0, testCount: 0 });
+  const [freeTimeSlots, setFreeTimeSlots] = useState([]);
+  const [planningId, setPlanningId] = useState(null);
+  const [aiPlans, setAiPlans] = useState({});
+  const [focusSubject, setFocusSubject] = useState("");
+  const [focusClass, setFocusClass] = useState(null);
+
+  // --- EFFECTS ---
+  useEffect(() => {
+    if (!auth.currentUser) return;
+
+    // 1. Fetch Timetable
+    const q = query(collection(db, "timetable"), where("userId", "==", auth.currentUser.uid));
+    const unsubscribeTimetable = onSnapshot(q, (snapshot) => {
+      const classes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setUpcomingClasses(classes);
+      setFreeTimeSlots(classes.filter(c => c.isCancelled));
+      setLoading(false);
+    }, (error) => {
+      console.error("Timetable subscription error:", error);
+      setLoading(false);
+    });
+
+    // 2. Fetch Quiz Scores for Metrics
+    const scoreQ = query(collection(db, "quiz_scores"), where("userId", "==", auth.currentUser.uid));
+    const unsubscribeScores = onSnapshot(scoreQ, (snapshot) => {
+      const scores = snapshot.docs.map(doc => doc.data());
+      if (scores.length > 0) {
+        const total = scores.reduce((acc, curr) => acc + (parseFloat(curr.score) / parseFloat(curr.maxScore) * 100), 0);
+        setMetrics({
+          avgScore: Math.round(total / scores.length),
+          testCount: scores.length
+        });
+      }
+    });
+
+    return () => {
+      unsubscribeTimetable();
+      unsubscribeScores();
+    };
+  }, []);
+
+  // --- HANDLERS ---
+  const handleAddScore = async (e) => {
+    e.preventDefault();
+    if (!auth.currentUser) return;
+    try {
+      await addDoc(collection(db, "quiz_scores"), {
+        ...newScore,
+        userId: auth.currentUser.uid,
+        timestamp: serverTimestamp()
+      });
+      setShowScoreModal(false);
+      setNewScore({ subject: "", topic: "", score: "", maxScore: "" });
+    } catch (error) {
+      console.error("Error adding score:", error);
+    }
+  };
+
+  const handleGapClose = async (cls) => {
+    try {
+      await updateDoc(doc(db, "timetable", cls.id), { isCancelled: false });
+    } catch (error) {
+      console.error("Error restoring class:", error);
+    }
+  };
+
+  const handlePlanFreeTime = (cls) => {
+    setPlanningId(cls.id);
+    // Simple mock logic for AI planning
+    setTimeout(() => {
+      setAiPlans(prev => ({
+        ...prev,
+        [cls.id]: `Revise ${cls.subject} previous year questions or complete the pending assignment.`
+      }));
+      setPlanningId(null);
+    }, 1500);
+  };
 
   return (
     <div className={`min-h-screen p-3 md:p-6 ${theme}`}>

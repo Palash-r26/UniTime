@@ -10,15 +10,6 @@ import { getStorage } from "firebase/storage";
 import { getMessaging } from "firebase/messaging";
 
 // Note: Ensure you have a .env file in your client directory with these values
-// VITE_FIREBASE_API_KEY=...
-// VITE_FIREBASE_AUTH_DOMAIN=...
-// etc.
-console.log("Environment Probe:", {
-  VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? "EXISTS" : "UNDEFINED",
-  MODE: import.meta.env.MODE,
-  BASE_URL: import.meta.env.BASE_URL
-});
-
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -28,8 +19,6 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
-
-console.log("Firebase Config Object:", firebaseConfig);
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
