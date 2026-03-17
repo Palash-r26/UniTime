@@ -21,7 +21,6 @@ const StudentLogin = ({ onLogin, onSwitchToSignup, onSwitchToTeacherLogin, onSwi
   };
 
   const handleGoogleLogin = async () => {
-    setError('');
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
@@ -40,11 +39,29 @@ const StudentLogin = ({ onLogin, onSwitchToSignup, onSwitchToTeacherLogin, onSwi
         onLogin();
       } else {
         await signOut(auth);
-        setError("Account not found. Please click 'Sign Up' to create a new account.");
+        setError(
+          <div className="flex flex-col gap-2">
+            <span>Account not found. It looks like you haven't registered yet.</span>
+            <button 
+              onClick={(e) => { e.preventDefault(); onSwitchToSignup(); }}
+              className="text-blue-600 font-bold hover:underline bg-transparent border-none cursor-pointer text-sm"
+            >
+              Click here to Sign Up first
+            </button>
+          </div>
+        );
       }
     } catch (err) {
-      console.error("Google Login Error:", err.message);
-      setError("Google Sign-In failed. Please try again.");
+      console.error("Google Login Error:", err.code, err.message);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError("Login popup was closed. Please try again.");
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        setError("Login request was cancelled.");
+      } else if (err.code === 'auth/network-request-failed') {
+        setError("Network error. Please check your internet connection.");
+      } else {
+        setError("Google Sign-In failed. Please ensure your account exists or try again.");
+      }
     }
   };
 
@@ -74,8 +91,16 @@ const StudentLogin = ({ onLogin, onSwitchToSignup, onSwitchToTeacherLogin, onSwi
       }
 
     } catch (err) {
-      console.error('Login error:', err.message);
-      setError('Invalid email or password. Please try again.');
+      console.error('Login error:', err.code, err.message);
+      if (err.code === 'auth/network-request-failed') {
+        setError('Network error. Please check your internet connection.');
+      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setError('Invalid email or password. Please try again.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many failed login attempts. Please try again later.');
+      } else {
+        setError('Login failed. Please try again or check your credentials.');
+      }
     }
   };
 

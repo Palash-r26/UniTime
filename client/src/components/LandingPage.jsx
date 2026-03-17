@@ -13,7 +13,9 @@ import {
   Mail,
   Phone,
   Instagram,
-  MapPin
+  MapPin,
+  Menu,
+  X
 } from "lucide-react";
 
 // IMPORT IMAGES
@@ -22,6 +24,7 @@ import logoHero from '../assets/3.png';     // Dark background optimized (Photo 
 
 const LandingPage = ({ onSwitchToStudentLogin, onSwitchToTeacherLogin, onSwitchToSignup }) => {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -62,31 +65,67 @@ const LandingPage = ({ onSwitchToStudentLogin, onSwitchToTeacherLogin, onSwitchT
 
           {/* AUTH BUTTONS (Fixed Visibility) */}
           <div className="flex items-center gap-4">
+            {/* Mobile Hamburger (Visible on small screens) */}
             <button
-              onClick={onSwitchToStudentLogin}
-              className={`flex items-center gap-2 font-medium transition-colors ${scrolled ? "text-slate-700 hover:text-indigo-600" : "text-white hover:text-indigo-200"
-                }`}
+              className="md:hidden text-slate-500 hover:text-indigo-600"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              <LogIn className="w-4 h-4" /> Login
+              {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
 
             <button
               onClick={onSwitchToSignup}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-full font-semibold transition-transform hover:scale-105 shadow-lg"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-full font-semibold transition-transform hover:scale-105 shadow-lg hidden md:block" // Hidden explicitly on mobile if hamburger takes over? Original code didn't hide it.
+            >
+              Get Started
+            </button>
+            {/* Retaining original behavior: "Get Started" was visible. But in the broken code, it was outside desktop links. 
+                Original code line 67 had "Auth Buttons".
+                In mobile menu (line 99), "Get Started" is also there.
+                Usually, getting started button is hidden on mobile if it's in the menu.
+                Let's double check original code line 67-72. It had no 'hidden' class. So it was visible on mobile too.
+                But hamburger was line 76 'md:hidden'.
+                If I put both in the same container, on mobile we see [Logo] [Button] [Hamburger]. This is fine.
+             */}
+            <button
+              onClick={onSwitchToSignup}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-full font-semibold transition-transform hover:scale-105 shadow-lg md:block hidden"
             >
               Get Started
             </button>
           </div>
         </div>
+
+        {/* MOBILE MENU DROPDOWN */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-gray-100 p-6 flex flex-col gap-4 animate-in slide-in-from-top-5">
+            <button onClick={() => { scrollTo("features"); setMobileMenuOpen(false); }} className="text-left py-2 font-medium text-slate-700 hover:text-indigo-600">Features</button>
+            <button onClick={() => { scrollTo("about"); setMobileMenuOpen(false); }} className="text-left py-2 font-medium text-slate-700 hover:text-indigo-600">About</button>
+            <button onClick={() => { scrollTo("contact"); setMobileMenuOpen(false); }} className="text-left py-2 font-medium text-slate-700 hover:text-indigo-600">Contact Us</button>
+            <hr className="border-gray-100 my-2" />
+            <button
+              onClick={() => { onSwitchToStudentLogin(); setMobileMenuOpen(false); }}
+              className="flex items-center gap-2 font-medium text-slate-700 hover:text-indigo-600 py-2"
+            >
+              <LogIn className="w-4 h-4" /> Login
+            </button>
+            <button
+              onClick={() => { onSwitchToSignup(); setMobileMenuOpen(false); }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-semibold text-center mt-2 shadow-lg"
+            >
+              Get Started
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* ================= HERO (Fixed Full Screen) ================= */}
-      <section className="relative w-full min-h-screen flex items-center justify-center bg-slate-900 pt-20">
+      < section className="relative w-full min-h-screen flex items-center justify-center bg-slate-900 pt-20" >
         {/* Background Gradients */}
-        <div className="absolute inset-0 overflow-hidden">
+        < div className="absolute inset-0 overflow-hidden" >
           <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[100px]"></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px]"></div>
-        </div>
+        </div >
 
         <div className="relative z-10 container mx-auto px-6 text-center">
           <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight">
@@ -125,10 +164,10 @@ const LandingPage = ({ onSwitchToStudentLogin, onSwitchToTeacherLogin, onSwitchT
             </button>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* ================= FEATURES ================= */}
-      <section id="features" className="py-24 bg-white w-full">
+      < section id="features" className="py-24 bg-white w-full" >
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
@@ -164,10 +203,10 @@ const LandingPage = ({ onSwitchToStudentLogin, onSwitchToTeacherLogin, onSwitchT
             )}
           </div>
         </div>
-      </section>
+      </section >
 
       {/* ================= ABOUT ================= */}
-      <section id="about" className="py-24 bg-slate-50 w-full border-t border-slate-200">
+      < section id="about" className="py-24 bg-slate-50 w-full border-t border-slate-200" >
         <div className="container mx-auto px-6 max-w-4xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">Why UniTime?</h2>
           <p className="text-slate-600 text-lg leading-relaxed mb-8">
@@ -177,10 +216,10 @@ const LandingPage = ({ onSwitchToStudentLogin, onSwitchToTeacherLogin, onSwitchT
             confidence.
           </p>
         </div>
-      </section>
+      </section >
 
       {/* ================= DETAILED FOOTER (Contact Us) ================= */}
-      <footer id="contact" className="bg-slate-900 text-slate-300 py-16 w-full mt-auto">
+      < footer id="contact" className="bg-slate-900 text-slate-300 py-16 w-full mt-auto" >
         <div className="container mx-auto px-6 grid md:grid-cols-3 gap-10">
 
           {/* Column 1: Brand */}
@@ -235,8 +274,8 @@ const LandingPage = ({ onSwitchToStudentLogin, onSwitchToTeacherLogin, onSwitchT
         <div className="border-t border-slate-800 mt-12 pt-8 text-center text-sm text-slate-500">
           © {new Date().getFullYear()} UniTime. All rights reserved.
         </div>
-      </footer>
-    </div>
+      </footer >
+    </div >
   );
 };
 

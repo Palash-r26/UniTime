@@ -15,6 +15,7 @@ export default function GoogleCalendar({ isDark }) {
   const [error, setError] = useState(null);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [tokenClient, setTokenClient] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
 
   const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
   const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -60,6 +61,7 @@ export default function GoogleCalendar({ isDark }) {
           },
         });
         setTokenClient(client);
+        setAuthReady(true);
       } catch (err) {
         console.error("GIS Init Error", err);
         setError("Google Identity Services failed to load. Check internet or ad-blockers.");
@@ -81,12 +83,12 @@ export default function GoogleCalendar({ isDark }) {
   }, []);
 
   const handleAuthClick = () => {
-    if (tokenClient) {
-      // Trigger the popup flow
-      tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-      setError("Auth client not ready. Try refreshing.");
+    if (!tokenClient) {
+      setError("Auth client still loading. Please wait a moment.");
+      return;
     }
+    // Trigger the popup flow
+    tokenClient.requestAccessToken({ prompt: 'consent' });
   };
 
   const handleSignoutClick = () => {
@@ -155,8 +157,12 @@ export default function GoogleCalendar({ isDark }) {
             </button>
           </div>
         ) : (
-          <button onClick={handleAuthClick} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg shadow-blue-500/30">
-            <LogIn className="w-4 h-4" /> Connect Calendar
+          <button 
+            onClick={handleAuthClick} 
+            disabled={!authReady}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-blue-500/30 text-white ${authReady ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-400 cursor-not-allowed'}`}
+          >
+            <LogIn className="w-4 h-4" /> {authReady ? 'Connect Calendar' : 'Loading auth...'}
           </button>
         )}
       </div>

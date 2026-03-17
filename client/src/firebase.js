@@ -1,18 +1,22 @@
-// client/src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth, GoogleAuthProvider } from "firebase/auth"; // 1. Added GoogleAuthProvider here
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
-import { getStorage } from "firebase/storage"; 
+import { getStorage } from "firebase/storage";
+import { getMessaging } from "firebase/messaging";
 
+// Note: Ensure you have a .env file in your client directory with these values
+// VITE_FIREBASE_API_KEY=...
+// VITE_FIREBASE_AUTH_DOMAIN=...
+// etc.
 const firebaseConfig = {
-  apiKey: "AIzaSyA4jbp9YpJPZZmcFhL7Pm75-TOzlNE_V8w",
-  authDomain: "unitime-db5fa.firebaseapp.com",
-  projectId: "unitime-db5fa",
-  storageBucket: "unitime-db5fa.firebasestorage.app",
-  messagingSenderId: "806375496068",
-  appId: "1:806375496068:web:771e800ba5d61d864ba5d1",
-  measurementId: "G-4FWL8BHPR8"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
@@ -25,8 +29,17 @@ googleProvider.addScope('https://www.googleapis.com/auth/classroom.courses.reado
 googleProvider.addScope('https://www.googleapis.com/auth/classroom.rosters.readonly');
 
 export const db = getFirestore(app);
+enableIndexedDbPersistence(db).catch((err) => {
+  if (err.code == 'failed-precondition') {
+    // Multiple tabs open, persistence can only be enabled in one tab at a a time.
+    console.log("Persistence failed: Multiple tabs open");
+  } else if (err.code == 'unimplemented') {
+    // The current browser does not support all of the features required to enable persistence
+    console.log("Persistence failed: Not supported");
+  }
+});
+
 export const auth = getAuth(app);
 export const analytics = getAnalytics(app);
 export const storage = getStorage(app);
-
-// 2. Initialize and Export Google Provider (Fixes the error)
+export const messaging = getMessaging(app);

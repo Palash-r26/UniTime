@@ -18,6 +18,8 @@ import { API_BASE_URL } from "./config";
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import NotificationManager from './components/NotificationManager'; // Import
+// ...
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -29,9 +31,20 @@ function App() {
 
   const [authView, setAuthView] = useState('landing');
   const [isDark, setIsDark] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showChat, setShowChat] = useState(false);
+
+  // --- HANDLE RESIZE ---
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // 1. Listen for Real-time Auth State Changes
   useEffect(() => {
@@ -59,10 +72,13 @@ function App() {
           if (userDoc.exists()) {
             setUserType(userDoc.data().role);
           }
-          setIsLoggedIn(true);
-          setShowWelcome(false); // Logged in? Hide welcome screen
         } catch (error) {
           console.error("Error fetching user role:", error);
+          // Default to student if role fetch fails (e.g. offline)
+          setUserType('student');
+        } finally {
+          setIsLoggedIn(true);
+          setShowWelcome(false); // Logged in? Hide welcome screen
         }
       } else {
         setIsLoggedIn(false);
@@ -204,12 +220,12 @@ function App() {
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
       />
-      <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-0' : 'lg:ml-0'}`}>
+      <main className="flex-1 p-4 md:p-8 transition-all duration-300">
         <Routes>
           <Route path="/" element={
             userType === 'teacher'
-              ? <TeacherDashBoard isDark={isDark} setIsDark={setIsDark} onLogout={handleLogout} />
-              : <UnifiedDashboard isDark={isDark} />
+              ? <TeacherDashBoard isDark={isDark} setIsDark={setIsDark} onLogout={handleLogout} setSidebarOpen={setSidebarOpen} />
+              : <UnifiedDashboard isDark={isDark} setSidebarOpen={setSidebarOpen} />
           } />
           <Route path="/analytics" element={<Analytics isDark={isDark} userType={userType} />} />
           <Route path="/timetable" element={<Timetable isDark={isDark} />} />
